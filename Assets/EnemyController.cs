@@ -5,7 +5,7 @@ using UnityEngine;
 /**********************************************************************
 * A class that manages and controls enemy behavior in an ET-like game.
 *
-* Jason Truskowski
+* Jason
 **********************************************************************/
 public class EnemyController : MonoBehaviour
 {

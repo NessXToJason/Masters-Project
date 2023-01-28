@@ -5,6 +5,11 @@ TagManager:
   serializedVersion: 2
   tags:
   - Enemy
+  - Ground
+  - Hole
+  - Barrier
+  - Phone Piece
+  - Reeses' Piece
   layers:
   - Default
   - TransparentFX

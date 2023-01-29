@@ -16,7 +16,6 @@ public class PlayerController : MonoBehaviour
     private float speedMod;
     private int phonePieces;
     private int reesesPieces;
-    private AudioSource pickupSound;
 
     // Start is called before the first frame update
     void Start()
@@ -27,7 +26,6 @@ public class PlayerController : MonoBehaviour
         speedMod = 1f;
         phonePieces = 0;
         reesesPieces = 0;
-        //pickupSound = GetComponent<AudioSource>();
     }
 
     // Update is called once per frame
@@ -56,19 +54,19 @@ public class PlayerController : MonoBehaviour
         // Movement
         if (Input.GetKey(KeyCode.W)) {
             transform.position += transform.up * moveSpeed * speedMod * Time.deltaTime;
-            GameController.energy -= 1 * speedMod;
+            GameController.energy -= 1 * (int)speedMod;
         }
         if (Input.GetKey(KeyCode.A)) {
             transform.position += transform.right * -moveSpeed * speedMod  * Time.deltaTime;
-            GameController.energy -= 1 * speedMod;
+            GameController.energy -= 1 * (int)speedMod;
         }
         if (Input.GetKey(KeyCode.S)) {
             transform.position += transform.up * -moveSpeed * speedMod  * Time.deltaTime;
-            GameController.energy -= 1 * speedMod;
+            GameController.energy -= 1 * (int)speedMod;
         }
         if (Input.GetKey(KeyCode.D)) {
             transform.position += transform.right * moveSpeed * speedMod * Time.deltaTime;
-            GameController.energy -= 1 * speedMod;
+            GameController.energy -= 1 * (int)speedMod;
         }
     }
 
@@ -81,7 +79,6 @@ public class PlayerController : MonoBehaviour
             loseLife();
         } else if(collision.collider.gameObject.tag == "Phone Piece") {
             Destroy(collision.collider.gameObject);
-            //pickupSound.Play();
             phonePieces++;
         } else if(collision.collider.gameObject.tag == "Reeses' Piece") {
             Destroy(collision.gameObject);
@@ -96,8 +93,7 @@ public class PlayerController : MonoBehaviour
         lives--;
         Debug.Log("Lives: " + lives);
         if(lives == 0) {
-            Destroy(gameObject);
-            //SceneManager.LoadScene("CreditsScene");
+            SceneManager.LoadScene("CreditsScene");
         } else {
             transform.position = new Vector3((float)0, (float)0, (float)0);
             GameController.energy = 1500;

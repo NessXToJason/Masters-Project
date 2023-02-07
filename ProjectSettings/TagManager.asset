@@ -10,6 +10,8 @@ TagManager:
   - Barrier
   - Phone Piece
   - Reeses' Piece
+  - Scientist
+  - Agent
   layers:
   - Default
   - TransparentFX

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 
-public class GameController : MonoBehaviour
+public class EnergyController : MonoBehaviour
 {
     public static int energy;
     private TMP_Text energyText;
@@ -12,12 +12,12 @@ public class GameController : MonoBehaviour
     void Start()
     {
         energy = 9999;
-        energyText = GameObject.Find("ET/Canvas/Energy").GetComponent<TMP_Text>();
+        //energyText = GameObject.Find("ET/Canvas/Energy").GetComponent<TMP_Text>();
     }
 
     // Update is called once per frame
     void Update()
     {
-        energyText.text = "Energy: " + energy;
+        //energyText.text = "Energy: " + energy;
     }
 }

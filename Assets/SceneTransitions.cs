@@ -9,7 +9,14 @@ public class SceneTransitions : MonoBehaviour
     * Loads the main game's scene
     *****************************************/
     public void toMainScene() {
-        SceneManager.LoadScene("SampleScene");
+        SceneManager.LoadScene("MainScene");
+    }
+
+    /*****************************************
+    * Loads the hole scene
+    *****************************************/
+    public void toHoleScene() {
+        SceneManager.LoadScene("HoleScene");
     }
 
     /******************************************

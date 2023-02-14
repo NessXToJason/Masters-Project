@@ -101,7 +101,13 @@ public class PlayerController : MonoBehaviour
         if (Input.GetKey(KeyCode.I)) {
 
         }
-        // TODO: call
+        // TODO: summon Elliot
+        if (Input.GetKey(KeyCode.E)) {
+            if(reesesPieces > 0) {
+                GameObject.Find("Elliot").GetComponent<AllyController>().active = true;
+            }
+        }
+        // TODO: call mothership
         if (Input.GetKey(KeyCode.C)) {
             if (phonePieces == 3) {
                 SceneManager.LoadScene("CreditsScene");
@@ -128,6 +134,17 @@ public class PlayerController : MonoBehaviour
                 transform.position += transform.right * moveSpeed * speedMod * Time.deltaTime;
                 energy -= .1f * speedMod;
             }
+        }
+
+        Debug.Log(transform.position.x + ", " + transform.position.y);
+
+        /* WORLD WRAP */
+        // FIXME: Adjust for map size
+        if(transform.position.y > 10.32 || transform.position.y < -10.32) {
+            gameObject.transform.position = new Vector3(transform.position.x, -transform.position.y, 0);
+        }
+        if(transform.position.x > 18.11 || transform.position.x < -18.11) {
+            gameObject.transform.position = new Vector3(-transform.position.x, transform.position.y, 0);
         }
 
         /* UI */
@@ -158,6 +175,10 @@ public class PlayerController : MonoBehaviour
                     }
                     // TODO: respawn phone piece somewhere
                     break;
+                case "Ally":
+                    // FIXME: adjust energy gain
+                    energy += (reesesPieces * 100);
+                    break;
                 case "Hole":
                     SceneManager.LoadScene("HoleScene");
                     break;
@@ -171,6 +192,11 @@ public class PlayerController : MonoBehaviour
                     break;
             }
         }
+    }
+
+    private void OnTriggerEnter(Collider other) {
+        SceneManager.MoveGameObjectToScene(gameObject, SceneManager.GetSceneByName("HoleScene"));
+        SceneManager.LoadScene("HoleScene");
     }
 
     public void scare() {
@@ -190,7 +216,7 @@ public class PlayerController : MonoBehaviour
 
         if (Input.GetKey(KeyCode.W) || Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.D)) {
             struggleAmt--;
-            struggleCD = 100f;
+            struggleCD = 10000f;
         }
 
         if (struggleAmt == 0) {

@@ -2,12 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-/**********************************************************************
-* A class that manages and controls enemy behavior in an ET-like game.
-*
-* Jason
-**********************************************************************/
-public class EnemyController : MonoBehaviour
+public class AllyController : MonoBehaviour
 {
     /* Keeps track of the player's location */
     private GameObject player;
@@ -20,27 +15,36 @@ public class EnemyController : MonoBehaviour
 
     private float moveSpeed;
 
-    public bool scared;
+    public bool active;
+
+    public bool available;
+
+    public float activationCooldown;
 
     // Start is called before the first frame update
     void Start()
     {
         player = GameObject.Find("ET");
         home = GameObject.Find(gameObject.name + "Home");
-        target = player;
+        target = home;
         hitbox = GetComponent<BoxCollider2D>();
-        moveSpeed = 1.5f;
-        scared = false;
+        moveSpeed = 3.5f;
+        active = false;
+        available = true;
+        activationCooldown = 1000f;
     }
 
     // Update is called once per frame
     void Update()
     {
         if (Vector3.Distance(home.transform.position, gameObject.transform.position) == 0) {
-            scared = false;
+            if (activationCooldown > 0) {
+                active = false;
+                available = true;
+            }
         }
 
-        if (!scared) {
+        if (active) {
             target = player;
         } else {
             target = home;
@@ -51,5 +55,20 @@ public class EnemyController : MonoBehaviour
             target.transform.position.y, target.transform.position.z);
         transform.position = Vector3.MoveTowards(transform.position,
             dest, moveSpeed * Time.deltaTime);
+
+        activationCooldown--;
+    }
+
+    void OnCollisionEnter2D(Collision2D collision) {
+        switch(collision.collider.gameObject.tag) {
+                case "Player":
+                    active = false;
+                    available = false;
+                    break;
+        }
+    }
+
+    public bool isActive() {
+        return active;
     }
 }

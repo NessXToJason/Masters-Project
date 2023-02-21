@@ -12,47 +12,39 @@ using TMPro;
 public class PlayerController : MonoBehaviour
 {
     private BoxCollider2D hitbox;
+    private Rigidbody2D rb;
 
     /* LIFE SYSTEM */
-    private static float energy;
-    private int lives;
+    private static float energy = 9999f;
+    private static int lives = 3;
 
     /* STATS */
-    private float moveSpeed;
-    private float speedMod;
-    private bool captured;
-    private int struggleAmt;
+    private static float moveSpeed = 2f;
+    private static float speedMod = 1f;
+    private static bool captured = false;
+    private static int struggleAmt = 0;
 
     /* INVENTORY */
-    private int phonePieces;
-    private int reesesPieces;
+    private static int phonePieces = 0;
+    private static int reesesPieces = 0;
 
-    /* ABILITY COOLDOWNS */
-    private float eatCD;
-    private float scareCD;
-    private float struggleCD;
+    /* ABILITIES */
+    private static float eatCD = 0f;
+    private static float scareCD = 0f;
+    private static float struggleCD = 100f;
+    private static bool flying = false;
 
     /* UI TEXT */
-    private TMP_Text livesText;
-    private TMP_Text energyText;
-    private TMP_Text phoneText;
-    private TMP_Text reesesText;
+    private static TMP_Text livesText;
+    private static TMP_Text energyText;
+    private static TMP_Text phoneText;
+    private static TMP_Text reesesText;
 
     // Start is called before the first frame update
     void Start()
     {
         hitbox = GetComponent<BoxCollider2D>();
-        energy = 9999f;
-        lives = 3;  
-        moveSpeed = 2f;
-        speedMod = 1f;
-        captured = false;
-        phonePieces = 0;
-        reesesPieces = 0;
-
-        eatCD = 0f;
-        scareCD = 0f;
-        struggleCD = 100f;
+        rb = GetComponent<Rigidbody2D>();
 
         livesText = GameObject.Find("ET/User Interface/Lives").GetComponent<TMP_Text>();
         energyText = GameObject.Find("ET/User Interface/Energy").GetComponent<TMP_Text>();
@@ -136,15 +128,34 @@ public class PlayerController : MonoBehaviour
             }
         }
 
-        Debug.Log(transform.position.x + ", " + transform.position.y);
+        // FIXME: add flying
+        if (Input.GetKey(KeyCode.Q)) {
+            //SceneManager.LoadScene("MainScene");
+            if (flying) {
+                flying = false;
+                if (SceneManager.GetActiveScene().name == "HoleScene") {
+                    rb.gravityScale = 1;
+                }
+            } else {
+                flying = true;
+                rb.gravityScale = 0;
+            }
+        }
 
         /* WORLD WRAP */
-        // FIXME: Adjust for map size
-        if(transform.position.y > 10.32 || transform.position.y < -10.32) {
-            gameObject.transform.position = new Vector3(transform.position.x, -transform.position.y, 0);
-        }
-        if(transform.position.x > 18.11 || transform.position.x < -18.11) {
-            gameObject.transform.position = new Vector3(-transform.position.x, transform.position.y, 0);
+        if(SceneManager.GetActiveScene().name == "MainScene") {
+            // FIXME: Adjust for map size
+            if(transform.position.y > 10.32 || transform.position.y < -10.32) {
+                gameObject.transform.position = new Vector3(transform.position.x, -transform.position.y, 0);
+            }
+            if(transform.position.x > 18.11 || transform.position.x < -18.11) {
+                gameObject.transform.position = new Vector3(-transform.position.x, transform.position.y, 0);
+            }
+        } else if (SceneManager.GetActiveScene().name == "HoleScene") {
+            if(transform.position.y > 5) {
+                SceneManager.LoadScene("MainScene");
+                rb.gravityScale = 0;
+            }
         }
 
         /* UI */
@@ -180,7 +191,11 @@ public class PlayerController : MonoBehaviour
                     energy += (reesesPieces * 100);
                     break;
                 case "Hole":
-                    SceneManager.LoadScene("HoleScene");
+                    if(!flying) {
+                        SceneManager.LoadScene("HoleScene");
+                        gameObject.transform.position = new Vector3(0f, 4.5f, 0f);
+                        rb.gravityScale = 1;
+                    }
                     break;
                 case "Phone Piece":
                     Destroy(collision.collider.gameObject);
@@ -189,6 +204,10 @@ public class PlayerController : MonoBehaviour
                 case "Reeses' Piece":
                     Destroy(collision.gameObject);
                     reesesPieces++;
+                    break;
+                case "Flower":
+                    Destroy(collision.gameObject);
+                    lives++;
                     break;
             }
         }

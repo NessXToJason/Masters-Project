@@ -32,8 +32,11 @@ public class PlayerController : MonoBehaviour
     /* ABILITIES */
     private static float eatCD = 0f;
     private static float scareCD = 0f;
+    private static float callCD = 0f;
+    private static float summonCD = 0f;
     private static float struggleCD = 100f;
     private static bool flying = false;
+    private static float flyCD = 0f;
 
     private static bool shipComing = false;
     private static float shipETA = 10f;
@@ -47,12 +50,20 @@ public class PlayerController : MonoBehaviour
     private static TMP_Text phoneText;
     private static TMP_Text reesesText;
 
+    private static float overworldX;
+    private static float overworldY;
+    private static bool justEscaped = false;
+
+    private static EnemyController scientist;
+    private static EnemyController agent;
+    private static AllyController elliot;
+
     // Start is called before the first frame update
     void Start()
     {
         hitbox = GetComponent<BoxCollider2D>();
         rb = GetComponent<Rigidbody2D>();
-        st = new SceneTransitions();
+        //st = new SceneTransitions();
 
         scareText = GameObject.Find("ET/User Interface/Controls/Scare").GetComponent<TMP_Text>();
         summonText = GameObject.Find("ET/User Interface/Controls/Summon").GetComponent<TMP_Text>();
@@ -61,31 +72,27 @@ public class PlayerController : MonoBehaviour
         energyText = GameObject.Find("ET/User Interface/Stats/Energy").GetComponent<TMP_Text>();
         phoneText = GameObject.Find("ET/User Interface/Stats/Phone Pieces").GetComponent<TMP_Text>();
         reesesText = GameObject.Find("ET/User Interface/Stats/Reeses' Pieces").GetComponent<TMP_Text>();
+
+        scientist = GameObject.Find("Scientist").GetComponent<EnemyController>();
+        agent = GameObject.Find("Agent").GetComponent<EnemyController>();
+        elliot = GameObject.Find("Elliot").GetComponent<AllyController>();
     }
 
     // Update is called once per frame
     void Update()
     {
+        Debug.Log(overworldX + ", " + overworldY);
         //if(!st.isPaused()) {
             if (energy <= 0) {
                 loseLife();
             }
 
             /* COOLDOWN */
-            // FIXME: make helper function
-            if(scareCD > 0) {
-                scareCD -= Time.deltaTime;
-            }
-            if(scareCD < 0) {
-                scareCD = 0;
-            }
-
-            if(eatCD > 0) {
-                eatCD -= Time.deltaTime;
-            }
-            if(eatCD < 0) {
-                eatCD = 0;
-            }
+            scareCD = updateCD(scareCD);
+            eatCD = updateCD(eatCD);
+            summonCD = updateCD(summonCD);
+            callCD = updateCD(callCD);
+            flyCD = updateCD(flyCD);
 
             if(shipComing) {
                 shipETA -= Time.deltaTime;
@@ -117,15 +124,17 @@ public class PlayerController : MonoBehaviour
             }
             // fly
             if (Input.GetKey(KeyCode.Q)) {
-                //SceneManager.LoadScene("MainScene");
-                if (flying) {
-                    flying = false;
-                    if (SceneManager.GetActiveScene().name == "HoleScene") {
-                        rb.gravityScale = 1;
+                if(flyCD == 0) {
+                    flyCD = 0.5f;
+                    if (flying) {
+                        flying = false;
+                        if (SceneManager.GetActiveScene().name == "HoleScene") {
+                            rb.gravityScale = 1;
+                        }
+                    } else {
+                        flying = true;
+                        rb.gravityScale = 0;
                     }
-                } else {
-                    flying = true;
-                    rb.gravityScale = 0;
                 }
             }
             // TODO: interact
@@ -137,12 +146,13 @@ public class PlayerController : MonoBehaviour
                 if(reesesPieces > 0) {
                     GameObject.Find("Elliot").GetComponent<AllyController>().active = true;
                 }
+                summonCD = 10f;
             }
             // TODO: call mothership
             if (Input.GetKey(KeyCode.C)) {
-                if (phonePieces == 3 && nearSpawn()) {
-                    //SceneManager.LoadScene("CreditsScene");
+                if (phonePieces >= 3 && nearSpawn()) {
                     shipComing = true;
+                    callCD = 30f;
                 }
             }
             // pause / unpause
@@ -172,11 +182,25 @@ public class PlayerController : MonoBehaviour
                 }
             }
             if(flying) {
-                energy -= 1f * speedMod;
+                energy -= .1f * speedMod;
+
+                if(SceneManager.GetActiveScene().name == "MainScene") {
+                    rb.isKinematic = true;
+                }
+            } else {
+                rb.isKinematic = false;
             }
 
             /* WORLD WRAP */
             if(SceneManager.GetActiveScene().name == "MainScene") {
+                if(justEscaped && (transform.position.x != overworldX || transform.position.y != overworldY)) {
+                    setPlayerCoords();
+                    scientist.setEnemyCoords();
+                    agent.setEnemyCoords();
+                    elliot.setAllyCoords();
+                    justEscaped = false;
+                }
+                
                 // FIXME: Adjust for map size
                 if(transform.position.y > 10.32 || transform.position.y < -10.32) {
                     gameObject.transform.position = new Vector3(transform.position.x, -transform.position.y, 0);
@@ -188,18 +212,12 @@ public class PlayerController : MonoBehaviour
                 if(transform.position.y > 5) {
                     SceneManager.LoadScene("MainScene");
                     rb.gravityScale = 0;
+                    justEscaped = true;
                 }
             }
 
             /* UI */
-            scareText.text = "P: Scare (" + (scareCD == 0 ? (int)scareCD : ((int)scareCD + 1)) + ")";
-            //summonText = GameObject.Find("ET/User Interface/Controls/Summon").GetComponent<TMP_Text>();
-            //callText = GameObject.Find("ET/User Interface/Controls/Call").GetComponent<TMP_Text>();
-            livesText.text = "Lives: " + lives;
-            energyText.text = "Energy: " + (int)energy;
-            phoneText.text = "Phone Pieces: " + phonePieces + "/3";
-            reesesText.text = "Reeses' Pieces: (" + reesesPieces + ")";
-            Debug.Log(scareCD);
+            updateUI();
 
             /* WIN CONDITION */
             // FIXME: Adjust radius, add visual indicator
@@ -208,7 +226,7 @@ public class PlayerController : MonoBehaviour
                     SceneManager.LoadScene("CreditsScene");
                 } else {
                     shipComing = false;
-                    shipETA = 10f;
+                    shipETA = 30f;
                 }
             }
         //}
@@ -237,10 +255,14 @@ public class PlayerController : MonoBehaviour
                     break;
                 case "Ally":
                     // FIXME: adjust energy gain
-                    energy += (reesesPieces * 100);
+                    energy += (reesesPieces * 773);
                     break;
                 case "Hole":
                     if(!flying) {
+                        savePlayerCoords(transform.position.x, transform.position.y);
+                        scientist.saveEnemyCoords(scientist.transform.position.x, scientist.transform.position.y);
+                        agent.saveEnemyCoords(agent.transform.position.x, agent.transform.position.y);
+                        elliot.saveAllyCoords(elliot.transform.position.x, elliot.transform.position.y);
                         SceneManager.LoadScene("HoleScene");
                         gameObject.transform.position = new Vector3(0f, 4.5f, 0f);
                         rb.gravityScale = 1;
@@ -262,9 +284,15 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    private void OnTriggerEnter(Collider other) {
-        SceneManager.MoveGameObjectToScene(gameObject, SceneManager.GetSceneByName("HoleScene"));
-        SceneManager.LoadScene("HoleScene");
+    public float updateCD(float cooldown) {
+        if(cooldown > 0) {
+            cooldown -= Time.deltaTime;
+        }
+        if(cooldown < 0) {
+            cooldown = 0;
+        }
+
+        return cooldown;
     }
 
     public void scare() {
@@ -307,5 +335,24 @@ public class PlayerController : MonoBehaviour
 
     private bool nearSpawn() {
         return (transform.position.x > -5 && transform.position.x < 5 && transform.position.y > -5 && transform.position.y < 5);
+    }
+
+    private void updateUI() {
+        scareText.text = "P: Scare (" + (scareCD == 0 ? (int)scareCD : ((int)scareCD + 1)) + ")";
+        summonText.text = "E: Elliot (" + (summonCD == 0 ? (int)summonCD : ((int)summonCD + 1)) + ")";
+        callText.text = "C: Phone Home (" + (callCD == 0 ? (int)callCD : ((int) callCD) + 1) + ")";
+        livesText.text = "Lives: " + lives;
+        energyText.text = "Energy: " + (int)energy;
+        phoneText.text = "Phone Pieces: " + phonePieces + "/3";
+        reesesText.text = "Reeses' Pieces: (" + reesesPieces + ")";
+    }
+
+    public void savePlayerCoords(float x, float y) {
+        overworldX = x;
+        overworldY = y;
+    }
+
+    public void setPlayerCoords() {
+        gameObject.transform.position = new Vector3((float)overworldX, (float)overworldY, (float)0);
     }
 }

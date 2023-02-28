@@ -22,6 +22,9 @@ public class EnemyController : MonoBehaviour
 
     public bool scared;
 
+    private static float overworldX;
+    private static float overworldY;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -51,5 +54,14 @@ public class EnemyController : MonoBehaviour
             target.transform.position.y, target.transform.position.z);
         transform.position = Vector3.MoveTowards(transform.position,
             dest, moveSpeed * Time.deltaTime);
+    }
+
+    public void saveEnemyCoords(float x, float y) {
+        overworldX = x;
+        overworldY = y;
+    }
+
+    public void setEnemyCoords() {
+        transform.position = new Vector3((float)overworldX, (float)overworldY, (float)0);
     }
 }

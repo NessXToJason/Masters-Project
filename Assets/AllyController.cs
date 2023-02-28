@@ -21,6 +21,9 @@ public class AllyController : MonoBehaviour
 
     public float activationCooldown;
 
+    private static float overworldX;
+    private static float overworldY;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -64,11 +67,21 @@ public class AllyController : MonoBehaviour
                 case "Player":
                     active = false;
                     available = false;
+                    target = home;
                     break;
         }
     }
 
     public bool isActive() {
         return active;
+    }
+
+    public void saveAllyCoords(float x, float y) {
+        overworldX = x;
+        overworldY = y;
+    }
+
+    public void setAllyCoords() {
+        transform.position = new Vector3((float)overworldX, (float)overworldY, (float)0);
     }
 }

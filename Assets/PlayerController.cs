@@ -338,9 +338,9 @@ public class PlayerController : MonoBehaviour
     }
 
     private void updateUI() {
-        scareText.text = "P: Scare (" + (scareCD == 0 ? (int)scareCD : ((int)scareCD + 1)) + ")";
-        summonText.text = "E: Elliot (" + (summonCD == 0 ? (int)summonCD : ((int)summonCD + 1)) + ")";
-        callText.text = "C: Phone Home (" + (callCD == 0 ? (int)callCD : ((int) callCD) + 1) + ")";
+        scareText.text = "Scare (" + (scareCD == 0 ? (int)scareCD : ((int)scareCD + 1)) + ")";
+        summonText.text = "Elliot (" + (summonCD == 0 ? (int)summonCD : ((int)summonCD + 1)) + ")";
+        callText.text = "Phone Home (" + (callCD == 0 ? (int)callCD : ((int) callCD) + 1) + ")";
         livesText.text = "Lives: " + lives;
         energyText.text = "Energy: " + (int)energy;
         phoneText.text = "Phone Pieces: " + phonePieces + "/3";

@@ -5,7 +5,7 @@ using UnityEngine.SceneManagement;
 
 public class SceneTransitions : MonoBehaviour
 {
-    private bool pause = false;
+    //private bool pause = false;
 
     /*****************************************
     * Loads the main game's scene
@@ -33,14 +33,6 @@ public class SceneTransitions : MonoBehaviour
     ******************************************/
     public void toTitleScene() {
         SceneManager.LoadScene("TitleScene");
-    }
-
-    public void togglePause() {
-        pause = !pause;
-    }
-
-    public bool isPaused() {
-        return pause;
     }
 
     /******************************************

@@ -40,26 +40,28 @@ public class AllyController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (Vector3.Distance(home.transform.position, gameObject.transform.position) == 0) {
-            if (activationCooldown > 0) {
-                active = false;
-                available = true;
+        if(!GameObject.Find("ET").GetComponent<PlayerController>().isPaused()) {
+            if (Vector3.Distance(home.transform.position, gameObject.transform.position) == 0) {
+                if (activationCooldown > 0) {
+                    active = false;
+                    available = true;
+                }
             }
+
+            if (active) {
+                target = player;
+            } else {
+                target = home;
+            }
+
+            // TODO: Replace with more robust pathfinding
+            Vector3 dest = new Vector3(target.transform.position.x,
+                target.transform.position.y, target.transform.position.z);
+            transform.position = Vector3.MoveTowards(transform.position,
+                dest, moveSpeed * Time.deltaTime);
+
+            activationCooldown--;
         }
-
-        if (active) {
-            target = player;
-        } else {
-            target = home;
-        }
-
-        // TODO: Replace with more robust pathfinding
-        Vector3 dest = new Vector3(target.transform.position.x,
-            target.transform.position.y, target.transform.position.z);
-        transform.position = Vector3.MoveTowards(transform.position,
-            dest, moveSpeed * Time.deltaTime);
-
-        activationCooldown--;
     }
 
     void OnCollisionEnter2D(Collision2D collision) {

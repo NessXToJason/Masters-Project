@@ -37,6 +37,7 @@ public class PlayerController : MonoBehaviour
     private static float struggleCD = 100f;
     private static bool flying = false;
     private static float flyCD = 0f;
+    private static float teleportCD = 0f;
 
     private static bool shipComing = false;
     private static float shipETA = 10f;
@@ -49,6 +50,8 @@ public class PlayerController : MonoBehaviour
     private static TMP_Text energyText;
     private static TMP_Text phoneText;
     private static TMP_Text reesesText;
+    private static TMP_Text flyText;
+    private static TMP_Text teleportText;
 
     private static float overworldX;
     private static float overworldY;
@@ -57,6 +60,8 @@ public class PlayerController : MonoBehaviour
     private static EnemyController scientist;
     private static EnemyController agent;
     private static AllyController elliot;
+
+    private static bool pause = false;
 
     // Start is called before the first frame update
     void Start()
@@ -72,6 +77,8 @@ public class PlayerController : MonoBehaviour
         energyText = GameObject.Find("ET/User Interface/Stats/Energy").GetComponent<TMP_Text>();
         phoneText = GameObject.Find("ET/User Interface/Stats/Phone Pieces").GetComponent<TMP_Text>();
         reesesText = GameObject.Find("ET/User Interface/Stats/Reeses' Pieces").GetComponent<TMP_Text>();
+        flyText = GameObject.Find("ET/User Interface/Controls/Fly").GetComponent<TMP_Text>();
+        teleportText = GameObject.Find("ET/User Interface/Controls/Teleport").GetComponent<TMP_Text>();
 
         scientist = GameObject.Find("Scientist").GetComponent<EnemyController>();
         agent = GameObject.Find("Agent").GetComponent<EnemyController>();
@@ -81,8 +88,13 @@ public class PlayerController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        Debug.Log(overworldX + ", " + overworldY);
-        //if(!st.isPaused()) {
+        Debug.Log(struggleAmt);
+        // pause / unpause
+        if (Input.GetKey(KeyCode.Escape)) {
+            togglePause();
+        }
+
+        if(!isPaused()) {
             if (energy <= 0) {
                 loseLife();
             }
@@ -93,6 +105,7 @@ public class PlayerController : MonoBehaviour
             summonCD = updateCD(summonCD);
             callCD = updateCD(callCD);
             flyCD = updateCD(flyCD);
+            teleportCD = updateCD(teleportCD);
 
             if(shipComing) {
                 shipETA -= Time.deltaTime;
@@ -101,7 +114,7 @@ public class PlayerController : MonoBehaviour
             /* ABILITIES */
             speedMod = 1f;
             // sprint
-            if (Input.GetKey(KeyCode.LeftShift)) {
+            if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift)) {
                 speedMod = 2f;
             }
             // eat
@@ -118,7 +131,6 @@ public class PlayerController : MonoBehaviour
             if (Input.GetKey(KeyCode.P)) {
                 if (scareCD == 0f) {
                     scare();
-                    // FIXME: adjust cooldown
                     scareCD = 10f;
                 }
             }
@@ -141,45 +153,28 @@ public class PlayerController : MonoBehaviour
             if (Input.GetKey(KeyCode.I)) {
 
             }
-            // TODO: summon Elliot
+            // summon Elliot
             if (Input.GetKey(KeyCode.E)) {
                 if(reesesPieces > 0) {
                     GameObject.Find("Elliot").GetComponent<AllyController>().active = true;
                 }
                 summonCD = 10f;
             }
-            // TODO: call mothership
+            // call mothership
             if (Input.GetKey(KeyCode.C)) {
                 if (phonePieces >= 3 && nearSpawn()) {
                     shipComing = true;
                     callCD = 30f;
                 }
             }
-            // pause / unpause
-            if (Input.GetKey(KeyCode.Escape)) {
-                st.togglePause();
-            }
 
             /* MOVEMENT */
             if (captured) {
+                rb.isKinematic = false;
                 struggle();
             } else {
-                if (Input.GetKey(KeyCode.W)) {
-                    transform.position += transform.up * moveSpeed * speedMod * Time.deltaTime;
-                    energy -= .1f * speedMod;
-                }
-                if (Input.GetKey(KeyCode.A)) {
-                    transform.position += transform.right * -moveSpeed * speedMod  * Time.deltaTime;
-                    energy -= .1f * speedMod;
-                }
-                if (Input.GetKey(KeyCode.S)) {
-                    transform.position += transform.up * -moveSpeed * speedMod  * Time.deltaTime;
-                    energy -= .1f * speedMod;
-                }
-                if (Input.GetKey(KeyCode.D)) {
-                    transform.position += transform.right * moveSpeed * speedMod * Time.deltaTime;
-                    energy -= .1f * speedMod;
-                }
+                move();
+                tryTeleport();
             }
             if(flying) {
                 energy -= .1f * speedMod;
@@ -202,11 +197,17 @@ public class PlayerController : MonoBehaviour
                 }
                 
                 // FIXME: Adjust for map size
-                if(transform.position.y > 10.32 || transform.position.y < -10.32) {
-                    gameObject.transform.position = new Vector3(transform.position.x, -transform.position.y, 0);
+                if(transform.position.y > 10.32) {
+                    gameObject.transform.position = new Vector3(transform.position.x, transform.position.y - 20.64f, 0);
                 }
-                if(transform.position.x > 18.11 || transform.position.x < -18.11) {
-                    gameObject.transform.position = new Vector3(-transform.position.x, transform.position.y, 0);
+                if(transform.position.y < -10.32) {
+                    gameObject.transform.position = new Vector3(transform.position.x, transform.position.y + 20.64f, 0);
+                }
+                if(transform.position.x > 17.96) {
+                    gameObject.transform.position = new Vector3(transform.position.x - 35.92f, transform.position.y, 0);
+                }
+                if(transform.position.x < -17.96) {
+                    gameObject.transform.position = new Vector3(transform.position.x + 35.92f, transform.position.y, 0);
                 }
             } else if (SceneManager.GetActiveScene().name == "HoleScene") {
                 if(transform.position.y > 5) {
@@ -229,7 +230,7 @@ public class PlayerController : MonoBehaviour
                     shipETA = 30f;
                 }
             }
-        //}
+        }
     }
 
     /*******************************************************************
@@ -263,6 +264,7 @@ public class PlayerController : MonoBehaviour
                         scientist.saveEnemyCoords(scientist.transform.position.x, scientist.transform.position.y);
                         agent.saveEnemyCoords(agent.transform.position.x, agent.transform.position.y);
                         elliot.saveAllyCoords(elliot.transform.position.x, elliot.transform.position.y);
+                        energy -= 269f;
                         SceneManager.LoadScene("HoleScene");
                         gameObject.transform.position = new Vector3(0f, 4.5f, 0f);
                         rb.gravityScale = 1;
@@ -280,6 +282,48 @@ public class PlayerController : MonoBehaviour
                     Destroy(collision.gameObject);
                     lives++;
                     break;
+            }
+        }
+    }
+
+    public void move() {
+        if (Input.GetKey(KeyCode.W)) {
+            transform.position += transform.up * moveSpeed * speedMod * Time.deltaTime;
+            energy -= .1f * speedMod;
+        }
+        if (Input.GetKey(KeyCode.A)) {
+            transform.position += transform.right * -moveSpeed * speedMod  * Time.deltaTime;
+            energy -= .1f * speedMod;
+        }
+        if (Input.GetKey(KeyCode.S)) {
+            transform.position += transform.up * -moveSpeed * speedMod  * Time.deltaTime;
+            energy -= .1f * speedMod;
+        }
+        if (Input.GetKey(KeyCode.D)) {
+            transform.position += transform.right * moveSpeed * speedMod * Time.deltaTime;
+            energy -= .1f * speedMod;
+        }
+    }
+
+    public void tryTeleport() {
+        Vector3 teleportDirection = new Vector3(0,0,0);
+
+        if(teleportCD <= 0) {
+            if(Input.GetKey(KeyCode.UpArrow)) 
+                teleportDirection = transform.up * 3;
+            else if(Input.GetKey(KeyCode.LeftArrow)) 
+                teleportDirection = -transform.right * 3;
+            else if(Input.GetKey(KeyCode.DownArrow)) 
+                teleportDirection = -transform.up * 3;
+            else if(Input.GetKey(KeyCode.RightArrow)) 
+                teleportDirection = transform.right * 3;
+            
+
+            if(teleportDirection != new Vector3(0,0,0)) {
+                transform.position += teleportDirection;
+                energy -= 50;
+                teleportCD = 15f;
+                flying = true;
             }
         }
     }
@@ -306,17 +350,21 @@ public class PlayerController : MonoBehaviour
         Vector3 dest = new Vector3(scientist.transform.position.x,
             scientist.transform.position.y, scientist.transform.position.z);
         transform.position = Vector3.MoveTowards(transform.position,
-            dest, moveSpeed * Time.deltaTime);
+           dest, moveSpeed * Time.deltaTime);
+        //transform.position = dest;
 
         struggleCD--;
 
-        if (Input.GetKey(KeyCode.W) || Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.D)) {
-            struggleAmt--;
-            struggleCD = 10000f;
+        if(struggleCD > 0) {
+            if (Input.GetKey(KeyCode.W) || Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.D)) {
+                struggleAmt--;
+                struggleCD = 10f;
+            }
         }
 
         if (struggleAmt == 0) {
             captured = false;
+            rb.isKinematic = true;
         }
     }
 
@@ -340,11 +388,13 @@ public class PlayerController : MonoBehaviour
     private void updateUI() {
         scareText.text = "Scare (" + (scareCD == 0 ? (int)scareCD : ((int)scareCD + 1)) + ")";
         summonText.text = "Elliot (" + (summonCD == 0 ? (int)summonCD : ((int)summonCD + 1)) + ")";
-        callText.text = "Phone Home (" + (callCD == 0 ? (int)callCD : ((int) callCD) + 1) + ")";
+        callText.text = "Phone Home (" + (callCD == 0 ? (int)callCD : ((int)callCD) + 1) + ")";
         livesText.text = "Lives: " + lives;
         energyText.text = "Energy: " + (int)energy;
         phoneText.text = "Phone Pieces: " + phonePieces + "/3";
         reesesText.text = "Reeses' Pieces: (" + reesesPieces + ")";
+        flyText.text = flying ? "Drop" : "Fly";
+        teleportText.text = "Teleport (" + (teleportCD == 0 ? (int)teleportCD : ((int)teleportCD) + 1) + ")";
     }
 
     public void savePlayerCoords(float x, float y) {
@@ -354,5 +404,13 @@ public class PlayerController : MonoBehaviour
 
     public void setPlayerCoords() {
         gameObject.transform.position = new Vector3((float)overworldX, (float)overworldY, (float)0);
+    }
+
+    public void togglePause() {
+        pause = !pause;
+    }
+
+    public bool isPaused() {
+        return pause;
     }
 }

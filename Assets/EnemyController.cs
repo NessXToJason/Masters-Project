@@ -39,21 +39,23 @@ public class EnemyController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (Vector3.Distance(home.transform.position, gameObject.transform.position) == 0) {
-            scared = false;
-        }
+        if(!GameObject.Find("ET").GetComponent<PlayerController>().isPaused()) {
+            if (Vector3.Distance(home.transform.position, gameObject.transform.position) == 0) {
+                scared = false;
+            }
 
-        if (!scared) {
-            target = player;
-        } else {
-            target = home;
-        }
+            if (!scared) {
+                target = player;
+            } else {
+                target = home;
+            }
 
-        // TODO: Replace with more robust pathfinding
-        Vector3 dest = new Vector3(target.transform.position.x,
-            target.transform.position.y, target.transform.position.z);
-        transform.position = Vector3.MoveTowards(transform.position,
-            dest, moveSpeed * Time.deltaTime);
+            // TODO: Replace with more robust pathfinding
+            Vector3 dest = new Vector3(target.transform.position.x,
+                target.transform.position.y, target.transform.position.z);
+            transform.position = Vector3.MoveTowards(transform.position,
+                dest, moveSpeed * Time.deltaTime);
+        }
     }
 
     public void saveEnemyCoords(float x, float y) {

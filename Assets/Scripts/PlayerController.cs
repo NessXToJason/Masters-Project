@@ -338,6 +338,7 @@ public class PlayerController : MonoBehaviour
         }
         if (Input.GetKey(KeyCode.A)) {
             transform.position += transform.right * -moveSpeed * speedMod  * Time.deltaTime;
+            gameObject.transform.localScale = new Vector3(1, 1, 1);
             energy -= .1f * speedMod;
         }
         if (Input.GetKey(KeyCode.S)) {
@@ -346,6 +347,7 @@ public class PlayerController : MonoBehaviour
         }
         if (Input.GetKey(KeyCode.D)) {
             transform.position += transform.right * moveSpeed * speedMod * Time.deltaTime;
+            gameObject.transform.localScale = new Vector3(-1, 1, 1);
             energy -= .1f * speedMod;
         }
     }

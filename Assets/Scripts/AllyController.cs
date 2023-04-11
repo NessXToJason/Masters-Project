@@ -59,7 +59,11 @@ public class AllyController : MonoBehaviour
                 target.transform.position.y, target.transform.position.z);
             transform.position = Vector3.MoveTowards(transform.position,
                 dest, moveSpeed * Time.deltaTime);
-
+            if(gameObject.transform.position.x < target.transform.position.x) {
+                gameObject.transform.localScale = new Vector3(1, 1, 1);
+            } else {
+                gameObject.transform.localScale = new Vector3(-1, 1, 1);
+            }
             activationCooldown--;
         }
     }

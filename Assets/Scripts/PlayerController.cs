@@ -1,0 +1,500 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.SceneManagement;
+using TMPro;
+
+/**********************************************************************
+* A class that manages and controls the player in an ET-like game.
+*
+* Jason
+**********************************************************************/
+public class PlayerController : MonoBehaviour
+{
+    private BoxCollider2D hitbox;
+    private Rigidbody2D rb;
+    private SceneTransitions st;
+
+    /* LIFE SYSTEM */
+    private static float energy = 9999f;
+    private static int lives = 3;
+
+    /* STATS */
+    private static float moveSpeed = 2f;
+    private static float speedMod = 1f;
+    private static bool captured = false;
+    private static int struggleAmt = 0;
+
+    /* INVENTORY */
+    private static int phonePieces = 0;
+    private static int reesesPieces = 0;
+    private static int nearbyPhone = -1;
+    private static int justCollected;
+
+    /* ABILITIES */
+    private static float eatCD = 0f;
+    private static float scareCD = 0f;
+    private static float callCD = 0f;
+    private static float summonCD = 0f;
+    private static float struggleCD = 100f;
+    private static bool flying = false;
+    private static float flyCD = 0f;
+    private static float teleportCD = 0f;
+    private static float searchCD = 0f;
+
+    private static bool shipComing = false;
+    private static float shipETA = 30f;
+
+    /* UI TEXT */
+    private static TMP_Text scareText;
+    private static TMP_Text summonText;
+    private static TMP_Text callText;
+    private static TMP_Text livesText;
+    private static TMP_Text energyText;
+    private static TMP_Text phoneText;
+    private static TMP_Text reesesText;
+    private static TMP_Text flyText;
+    private static TMP_Text searchText;
+    private static TMP_Text teleportText;
+    private static TMP_Text objectiveText;
+
+    private static float overworldX;
+    private static float overworldY;
+    private static bool justEscaped = false;
+
+    private static EnemyController scientist;
+    private static EnemyController agent;
+    private static AllyController elliot;
+    private static LocatorController phone0;
+    private static LocatorController phone1;
+    private static LocatorController phone2;
+
+    private static bool pause = false;
+
+    // Start is called before the first frame update
+    void Start()
+    {
+        hitbox = GetComponent<BoxCollider2D>();
+        rb = GetComponent<Rigidbody2D>();
+
+        scareText = GameObject.Find("ET/User Interface/Controls/ScareCD").GetComponent<TMP_Text>();
+        summonText = GameObject.Find("ET/User Interface/Controls/SummonCD").GetComponent<TMP_Text>();
+        callText = GameObject.Find("ET/User Interface/Controls/CallCD").GetComponent<TMP_Text>();
+        livesText = GameObject.Find("ET/User Interface/Stats/Lives").GetComponent<TMP_Text>();
+        energyText = GameObject.Find("ET/User Interface/Stats/Energy").GetComponent<TMP_Text>();
+        phoneText = GameObject.Find("ET/User Interface/Stats/Phone Pieces").GetComponent<TMP_Text>();
+        reesesText = GameObject.Find("ET/User Interface/Stats/Reeses' Pieces").GetComponent<TMP_Text>();
+        flyText = GameObject.Find("ET/User Interface/Controls/Fly").GetComponent<TMP_Text>();
+        searchText = GameObject.Find("ET/User Interface/Controls/SearchCD").GetComponent<TMP_Text>();
+        teleportText = GameObject.Find("ET/User Interface/Controls/TeleportCD").GetComponent<TMP_Text>();
+        objectiveText = GameObject.Find("ET/User Interface/Stats/Objective").GetComponent<TMP_Text>();
+
+        if(SceneManager.GetActiveScene().name == "MainScene") {
+            scientist = GameObject.Find("Scientist").GetComponent<EnemyController>();
+            agent = GameObject.Find("Agent").GetComponent<EnemyController>();
+            elliot = GameObject.Find("Elliot").GetComponent<AllyController>();
+            phone0 = GameObject.Find("Phone0").GetComponent<LocatorController>();
+            phone1 = GameObject.Find("Phone1").GetComponent<LocatorController>();
+            phone2 = GameObject.Find("Phone2").GetComponent<LocatorController>();
+        }
+    }
+
+    // Update is called once per frame
+    void Update()
+    {
+        Debug.Log(getNearbyPhone());
+        // pause / unpause
+        if (Input.GetKey(KeyCode.Escape)) {
+            togglePause();
+        }
+
+        if(!isPaused()) {
+            if (energy <= 0) {
+                loseLife();
+            }
+
+            /* COOLDOWN */
+            scareCD = updateCD(scareCD);
+            eatCD = updateCD(eatCD);
+            summonCD = updateCD(summonCD);
+            flyCD = updateCD(flyCD);
+            teleportCD = updateCD(teleportCD);
+            searchCD = updateCD(searchCD);
+            if(searchCD < 18f && SceneManager.GetActiveScene().name == "MainScene") {
+                phone0.hideLocation();
+                phone1.hideLocation();
+                phone2.hideLocation();
+            }
+
+            if(shipComing) {
+                shipETA -= Time.deltaTime;
+                callCD = shipETA;
+            } else {
+                callCD = updateCD(callCD);
+            }
+
+            /* ABILITIES */
+            speedMod = 1f;
+            // sprint
+            if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift)) {
+                speedMod = 2f;
+            }
+            // eat
+            if (Input.GetKey(KeyCode.Space)) {
+                if(reesesPieces > 0) {
+                    if (eatCD <= 0) {
+                        energy += 341;
+                        reesesPieces -= 1;
+                        eatCD = 10f;
+                    }
+                }
+            }
+            if (Input.GetKey(KeyCode.O) && SceneManager.GetActiveScene().name == "MainScene") {
+                phone0.showLocation();
+                phone1.showLocation();
+                phone2.showLocation();
+                searchCD = 20f;
+            }
+            // scare
+            if (Input.GetKey(KeyCode.P)) {
+                if (scareCD == 0f) {
+                    scare();
+                    scareCD = 10f;
+                }
+            }
+            // fly
+            if (Input.GetKey(KeyCode.Q)) {
+                if(flyCD == 0) {
+                    flyCD = 0.5f;
+                    if (flying) {
+                        flying = false;
+                        if (SceneManager.GetActiveScene().name == "HoleScene") {
+                            rb.gravityScale = 1;
+                        }
+                    } else {
+                        flying = true;
+                        rb.gravityScale = 0;
+                    }
+                }
+            }
+            // summon Elliot
+            if (Input.GetKey(KeyCode.E)) {
+                if(reesesPieces > 0) {
+                    GameObject.Find("Elliot").GetComponent<AllyController>().active = true;
+                }
+                summonCD = 10f;
+            }
+            // call mothership
+            if (Input.GetKey(KeyCode.C)) {
+                if (phonePieces >= 3 && nearSpawn()) {
+                    shipComing = true;
+                    callCD = 30f;
+                }
+            }
+
+            /* MOVEMENT */
+            if (captured) {
+                rb.isKinematic = false;
+                struggle();
+            } else {
+                move();
+                tryTeleport();
+            }
+            if(flying) {
+                energy -= .1f * speedMod;
+
+                if(SceneManager.GetActiveScene().name == "MainScene") {
+                    rb.isKinematic = true;
+                }
+            } else {
+                rb.isKinematic = false;
+            }
+
+            /* WORLD WRAP */
+            if(SceneManager.GetActiveScene().name == "MainScene") {
+                if(justEscaped && (transform.position.x != overworldX || transform.position.y != overworldY)) {
+                    setPlayerCoords();
+                    scientist.setEnemyCoords();
+                    agent.setEnemyCoords();
+                    elliot.setAllyCoords();
+                    phone0.setPhoneCoords();
+                    phone1.setPhoneCoords();
+                    phone2.setPhoneCoords();
+                    justEscaped = false;
+                }
+                
+                // FIXME: Adjust for map size
+                if(transform.position.y > 10.32) {
+                    gameObject.transform.position = new Vector3(transform.position.x, transform.position.y - 20.64f, 0);
+                }
+                if(transform.position.y < -10.32) {
+                    gameObject.transform.position = new Vector3(transform.position.x, transform.position.y + 20.64f, 0);
+                }
+                if(transform.position.x > 17.96) {
+                    gameObject.transform.position = new Vector3(transform.position.x - 35.92f, transform.position.y, 0);
+                }
+                if(transform.position.x < -17.96) {
+                    gameObject.transform.position = new Vector3(transform.position.x + 35.92f, transform.position.y, 0);
+                }
+            } else if (SceneManager.GetActiveScene().name == "HoleScene") {
+                if(transform.position.y > 5) {
+                    SceneManager.LoadScene("MainScene");
+                    rb.gravityScale = 0;
+                    justEscaped = true;
+                    nearbyPhone = -1;
+                    if(justCollected != -1) {
+                        GameObject.Find("Phone" + justCollected).GetComponent<LocatorController>().removeFromPlay();
+                    }
+                }
+            }
+
+            /* UI */
+            updateUI();
+
+            /* WIN CONDITION */
+            if(shipETA <= 0) {
+                if(nearSpawn()) {
+                    SceneManager.LoadScene("CreditsScene");
+                } else {
+                    shipComing = false;
+                    shipETA = 30f;
+                }
+            }
+        }
+    }
+
+    /*******************************************************************
+    * Manages collision detection for the player
+    * @param collision The hitbox of the object being collided with
+    *******************************************************************/
+    void OnCollisionEnter2D(Collision2D collision) {
+        if(!captured) {
+            switch(collision.collider.gameObject.tag) {
+                // FIXME
+                case "Scientist":
+                    captured = true;
+                    struggleAmt = 20;
+                    GameObject.Find("Scientist").GetComponent<EnemyController>().scared = true;
+                    break;
+                case "Agent":
+                    if (phonePieces > 0){
+                        phonePieces--;
+                        for (int i = 0; i < 3; i++) {
+                            if(GameObject.Find("Phone" + i).transform.position == new Vector3((float)(30 + i), (float)(30 + i), 0f)) {
+                                GameObject.Find("Phone" + i).GetComponent<LocatorController>().newPosition();
+                            }
+                        }
+                    } else if (reesesPieces > 0) {
+                        reesesPieces = 0;
+                    }
+                    GameObject.Find("Agent").GetComponent<EnemyController>().scared = true;
+                    break;
+                case "Ally":
+                    energy += (reesesPieces * 773);
+                    reesesPieces = 0;
+                    break;
+                case "Hole":
+                    if(!flying) {
+                        savePlayerCoords(transform.position.x, transform.position.y);
+                        scientist.saveEnemyCoords(scientist.transform.position.x, scientist.transform.position.y,
+                                                    agent.transform.position.x, agent.transform.position.y);
+                        elliot.saveAllyCoords(elliot.transform.position.x, elliot.transform.position.y);
+                        phone0.savePhoneCoords(phone0.transform.position.x, phone0.transform.position.y,
+                                                phone1.transform.position.x, phone1.transform.position.y,
+                                                phone2.transform.position.x, phone2.transform.position.y);
+                        energy -= 269f;
+                        if(Vector3.Distance(transform.transform.position, phone0.transform.position) < 3f) {
+                            nearbyPhone = 0;
+                        } else if (Vector3.Distance(transform.transform.position, phone1.transform.position) < 3f) {
+                            nearbyPhone = 1;
+                        } else if (Vector3.Distance(transform.transform.position, phone2.transform.position) < 3f) {
+                            nearbyPhone = 2;
+                        }
+                        Debug.Log(nearbyPhone);
+                        SceneManager.LoadScene("HoleScene");
+                        gameObject.transform.position = new Vector3(0f, 4.5f, 0f);
+                        rb.gravityScale = 1;
+                    }
+                    break;
+                case "Phone Piece":
+                    Destroy(collision.collider.gameObject);
+                    phonePieces++;
+                    break;
+                case "Reeses' Piece":
+                    reesesPieces++;
+                    break;
+                case "Flower":
+                    Destroy(collision.gameObject);
+                    lives++;
+                    break;
+            }
+        }
+    }
+
+    public void move() {
+        if (Input.GetKey(KeyCode.W)) {
+            transform.position += transform.up * moveSpeed * speedMod * Time.deltaTime;
+            energy -= .1f * speedMod;
+        }
+        if (Input.GetKey(KeyCode.A)) {
+            transform.position += transform.right * -moveSpeed * speedMod  * Time.deltaTime;
+            energy -= .1f * speedMod;
+        }
+        if (Input.GetKey(KeyCode.S)) {
+            transform.position += transform.up * -moveSpeed * speedMod  * Time.deltaTime;
+            energy -= .1f * speedMod;
+        }
+        if (Input.GetKey(KeyCode.D)) {
+            transform.position += transform.right * moveSpeed * speedMod * Time.deltaTime;
+            energy -= .1f * speedMod;
+        }
+    }
+
+    public void tryTeleport() {
+        Vector3 teleportDirection = new Vector3(0,0,0);
+
+        if(teleportCD <= 0) {
+            if(Input.GetKey(KeyCode.UpArrow)) 
+                teleportDirection = transform.up * 3;
+            else if(Input.GetKey(KeyCode.LeftArrow)) 
+                teleportDirection = -transform.right * 3;
+            else if(Input.GetKey(KeyCode.DownArrow)) 
+                teleportDirection = -transform.up * 3;
+            else if(Input.GetKey(KeyCode.RightArrow)) 
+                teleportDirection = transform.right * 3;
+            
+
+            if(teleportDirection != new Vector3(0,0,0)) {
+                transform.position += teleportDirection;
+                energy -= 50;
+                teleportCD = 15f;
+                flying = true;
+            }
+        }
+    }
+
+    public float updateCD(float cooldown) {
+        if(cooldown > 0) {
+            cooldown -= Time.deltaTime;
+        }
+        if(cooldown < 0) {
+            cooldown = 0;
+        }
+
+        return cooldown;
+    }
+
+    public void scare() {
+        GameObject.Find("Scientist").GetComponent<EnemyController>().scared = true;
+        GameObject.Find("Agent").GetComponent<EnemyController>().scared = true;
+    }
+
+    private void struggle() {
+        GameObject scientist = GameObject.Find("Scientist");
+
+        Vector3 dest = new Vector3(scientist.transform.position.x,
+            scientist.transform.position.y, scientist.transform.position.z);
+        transform.position = Vector3.MoveTowards(transform.position,
+           dest, moveSpeed * Time.deltaTime);
+        //transform.position = dest;
+
+        struggleCD--;
+
+        if(struggleCD > 0) {
+            if (Input.GetKey(KeyCode.W) || Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.D)) {
+                struggleAmt--;
+                struggleCD = 10f;
+            }
+        }
+
+        if (struggleAmt == 0) {
+            captured = false;
+            rb.isKinematic = true;
+        }
+    }
+
+    /*
+    * Manages behavior for player deaths
+    */
+    private void loseLife() {
+        lives--;
+        if(lives == 0) {
+            SceneManager.LoadScene("CreditsScene");
+        } else {
+            transform.position = new Vector3((float)0, (float)0, (float)0);
+            energy = 1500;
+        }
+    }
+
+    private bool nearSpawn() {
+        return (transform.position.x > -6 && transform.position.x < 6 && transform.position.y > -3.5 && transform.position.y < 3.5);
+    }
+
+    private void updateUI() {
+        scareText.text = updateCDUI(scareCD);
+        summonText.text = updateCDUI(summonCD);
+        callText.text = updateCDUI(callCD);
+        livesText.text = "Lives: " + lives;
+        energyText.text = "Energy: " + (int)energy;
+        phoneText.text = "Phone Pieces: " + phonePieces + "/3";
+        reesesText.text = "Reeses' Pieces: " + reesesPieces;
+        flyText.text = flying ? "Drop" : "Fly";
+        searchText.text = updateCDUI(searchCD);
+        teleportText.text = updateCDUI(teleportCD);
+
+        if(SceneManager.GetActiveScene().name == "HoleScene") {
+            objectiveText.text = "Fly out of the hole!";
+        } else if(captured) {
+            objectiveText.text = "Move around to break free!";
+        } else if(phonePieces < 3) {
+            objectiveText.text = "Collect phone pieces!";
+        } else {
+            if(nearSpawn()) {
+                if(shipComing) {
+                    objectiveText.text = "Wait here for " + ((int)shipETA + 1) + " second" + (((int)shipETA + 1 == 1) ? "" : "s") + "!";
+                } else {
+                    objectiveText.text = "E.T. phone home!";
+                }
+            } else {
+                if(shipComing) {
+                    objectiveText.text = "Get to the center within " + (int)shipETA + " seconds!";
+                } else {
+                    objectiveText.text = "Get to the center and phone home!";
+                }
+            }
+        }
+    }
+
+    private string updateCDUI(float cd) {
+        return "" + (cd == 0 ? "" : "" + ((int)cd + 1));
+    }
+
+    public void savePlayerCoords(float x, float y) {
+        overworldX = x;
+        overworldY = y;
+    }
+
+    public void setPlayerCoords() {
+        gameObject.transform.position = new Vector3((float)overworldX, (float)overworldY, (float)0);
+    }
+
+    public void togglePause() {
+        pause = !pause;
+    }
+
+    public bool isPaused() {
+        return pause;
+    }
+
+    public int getNearbyPhone() {
+        return nearbyPhone;
+    }
+
+    public void collectPiece(int piece) {
+        justCollected = piece;
+    }
+
+    public int getJustCollected() {
+        return justCollected;
+    }
+}

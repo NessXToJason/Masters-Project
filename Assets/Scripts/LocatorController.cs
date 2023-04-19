@@ -10,7 +10,6 @@ public class LocatorController : MonoBehaviour
     private static float overworldY1;
     private static float overworldX2;
     private static float overworldY2;
-    private bool collected;
     private int index;
     private PlayerController player;
     public Renderer rend;
@@ -22,7 +21,6 @@ public class LocatorController : MonoBehaviour
     // Start is called before the first frame update
     void Start() {
         index = int.Parse(gameObject.name.Substring(5));
-        collected = false;
         newPosition();
         player = GameObject.Find("ET").GetComponent<PlayerController>();
         rend = GetComponent<Renderer>();
@@ -89,9 +87,5 @@ public class LocatorController : MonoBehaviour
 
     public void showLocation() {
         rend.enabled = true;
-    }
-
-    public void collect() {
-        collected = true;
     }
 }

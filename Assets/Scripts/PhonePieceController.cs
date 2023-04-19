@@ -5,13 +5,13 @@ using UnityEngine;
 public class PhonePieceController : MonoBehaviour
 {
     private PlayerController player;
-    private string currentPiece;
+    private int currentPiece;
 
     // Start is called before the first frame update
     void Start()
     {
         player = GameObject.Find("ET").GetComponent<PlayerController>();
-        currentPiece = "Phone" + player.getNearbyPhone();
+        currentPiece = player.getNearbyPhone();
     }
 
     // Update is called once per frame
@@ -23,8 +23,9 @@ public class PhonePieceController : MonoBehaviour
     }
 
     void OnCollisionEnter2D(Collision2D collision) {
+        Debug.Log("Current Piece: " + currentPiece);
         if(collision.collider.gameObject.tag == "Player") {
-            player.collectPiece(int.Parse(currentPiece));
+            player.collectPiece(currentPiece);
         }
     }
 }

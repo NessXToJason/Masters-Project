@@ -77,17 +77,17 @@ public class PlayerController : MonoBehaviour
         hitbox = GetComponent<BoxCollider2D>();
         rb = GetComponent<Rigidbody2D>();
 
-        scareText = GameObject.Find("ET/User Interface/Controls/ScareCD").GetComponent<TMP_Text>();
-        summonText = GameObject.Find("ET/User Interface/Controls/SummonCD").GetComponent<TMP_Text>();
-        callText = GameObject.Find("ET/User Interface/Controls/CallCD").GetComponent<TMP_Text>();
-        livesText = GameObject.Find("ET/User Interface/Stats/Lives").GetComponent<TMP_Text>();
-        energyText = GameObject.Find("ET/User Interface/Stats/Energy").GetComponent<TMP_Text>();
-        phoneText = GameObject.Find("ET/User Interface/Stats/Phone Pieces").GetComponent<TMP_Text>();
-        reesesText = GameObject.Find("ET/User Interface/Stats/Reeses' Pieces").GetComponent<TMP_Text>();
-        flyText = GameObject.Find("ET/User Interface/Controls/Fly").GetComponent<TMP_Text>();
-        searchText = GameObject.Find("ET/User Interface/Controls/SearchCD").GetComponent<TMP_Text>();
-        teleportText = GameObject.Find("ET/User Interface/Controls/TeleportCD").GetComponent<TMP_Text>();
-        objectiveText = GameObject.Find("ET/User Interface/Stats/Objective").GetComponent<TMP_Text>();
+        scareText = GameObject.Find("User Interface/Controls/ScareCD").GetComponent<TMP_Text>();
+        summonText = GameObject.Find("User Interface/Controls/SummonCD").GetComponent<TMP_Text>();
+        callText = GameObject.Find("User Interface/Controls/CallCD").GetComponent<TMP_Text>();
+        livesText = GameObject.Find("User Interface/Stats/Lives").GetComponent<TMP_Text>();
+        energyText = GameObject.Find("User Interface/Stats/Energy").GetComponent<TMP_Text>();
+        phoneText = GameObject.Find("User Interface/Stats/Phone Pieces").GetComponent<TMP_Text>();
+        reesesText = GameObject.Find("User Interface/Stats/Reeses' Pieces").GetComponent<TMP_Text>();
+        flyText = GameObject.Find("User Interface/Controls/Fly").GetComponent<TMP_Text>();
+        searchText = GameObject.Find("User Interface/Controls/SearchCD").GetComponent<TMP_Text>();
+        teleportText = GameObject.Find("User Interface/Controls/TeleportCD").GetComponent<TMP_Text>();
+        objectiveText = GameObject.Find("User Interface/Stats/Objective").GetComponent<TMP_Text>();
 
         if(SceneManager.GetActiveScene().name == "MainScene") {
             scientist = GameObject.Find("Scientist").GetComponent<EnemyController>();
@@ -96,13 +96,16 @@ public class PlayerController : MonoBehaviour
             phone0 = GameObject.Find("Phone0").GetComponent<LocatorController>();
             phone1 = GameObject.Find("Phone1").GetComponent<LocatorController>();
             phone2 = GameObject.Find("Phone2").GetComponent<LocatorController>();
+            DontDestroyOnLoad(phone0);
+            DontDestroyOnLoad(phone1);
+            DontDestroyOnLoad(phone2);
         }
     }
 
     // Update is called once per frame
     void Update()
     {
-        Debug.Log(getNearbyPhone());
+        //Debug.Log(justCollected);
         // pause / unpause
         if (Input.GetKey(KeyCode.Escape)) {
             togglePause();
@@ -141,55 +144,28 @@ public class PlayerController : MonoBehaviour
             }
             // eat
             if (Input.GetKey(KeyCode.Space)) {
-                if(reesesPieces > 0) {
-                    if (eatCD <= 0) {
-                        energy += 341;
-                        reesesPieces -= 1;
-                        eatCD = 10f;
-                    }
-                }
+                eat();
             }
             if (Input.GetKey(KeyCode.O) && SceneManager.GetActiveScene().name == "MainScene") {
-                phone0.showLocation();
-                phone1.showLocation();
-                phone2.showLocation();
-                searchCD = 20f;
+                search();
             }
             // scare
             if (Input.GetKey(KeyCode.P)) {
                 if (scareCD == 0f) {
                     scare();
-                    scareCD = 10f;
                 }
             }
             // fly
             if (Input.GetKey(KeyCode.Q)) {
-                if(flyCD == 0) {
-                    flyCD = 0.5f;
-                    if (flying) {
-                        flying = false;
-                        if (SceneManager.GetActiveScene().name == "HoleScene") {
-                            rb.gravityScale = 1;
-                        }
-                    } else {
-                        flying = true;
-                        rb.gravityScale = 0;
-                    }
-                }
+                fly();
             }
             // summon Elliot
             if (Input.GetKey(KeyCode.E)) {
-                if(reesesPieces > 0) {
-                    GameObject.Find("Elliot").GetComponent<AllyController>().active = true;
-                }
-                summonCD = 10f;
+                summon();
             }
             // call mothership
             if (Input.GetKey(KeyCode.C)) {
-                if (phonePieces >= 3 && nearSpawn()) {
-                    shipComing = true;
-                    callCD = 30f;
-                }
+                call();
             }
 
             /* MOVEMENT */
@@ -238,12 +214,22 @@ public class PlayerController : MonoBehaviour
                 }
             } else if (SceneManager.GetActiveScene().name == "HoleScene") {
                 if(transform.position.y > 5) {
-                    SceneManager.LoadScene("MainScene");
-                    rb.gravityScale = 0;
-                    justEscaped = true;
-                    nearbyPhone = -1;
-                    if(justCollected != -1) {
-                        GameObject.Find("Phone" + justCollected).GetComponent<LocatorController>().removeFromPlay();
+                    leaveHole();
+                    string trueJustCollected = "" + (justCollected - 1);
+                    // if(trueJustCollected != "-1") {
+                    //     Debug.Log("True Just Collected: " + trueJustCollected);
+                    //     string justCollectedString = "Phone" + trueJustCollected;
+                    //     GameObject.Find(justCollectedString).removeFromPlay();
+                    // }
+                    if(trueJustCollected == "0") {
+                        //phone0 = GameObject.Find("Phone0").GetComponent<LocatorController>();
+                        phone0.removeFromPlay();
+                    } else if(trueJustCollected == "1") {
+                        //phone1 = GameObject.Find("Phone1").GetComponent<LocatorController>();
+                        phone1.removeFromPlay();
+                    } else if(trueJustCollected == "2") {
+                        //phone2 = GameObject.Find("Phone2").GetComponent<LocatorController>();
+                        phone2.removeFromPlay();
                     }
                 }
             }
@@ -295,7 +281,8 @@ public class PlayerController : MonoBehaviour
                     break;
                 case "Hole":
                     if(!flying) {
-                        savePlayerCoords(transform.position.x, transform.position.y);
+                        savePlayerCoords(gameObject.transform.position.x, gameObject.transform.position.y);
+                        Debug.Log(gameObject.transform.position);
                         scientist.saveEnemyCoords(scientist.transform.position.x, scientist.transform.position.y,
                                                     agent.transform.position.x, agent.transform.position.y);
                         elliot.saveAllyCoords(elliot.transform.position.x, elliot.transform.position.y);
@@ -319,6 +306,7 @@ public class PlayerController : MonoBehaviour
                 case "Phone Piece":
                     Destroy(collision.collider.gameObject);
                     phonePieces++;
+                    collectPiece(getNearbyPhone());
                     break;
                 case "Reeses' Piece":
                     reesesPieces++;
@@ -386,9 +374,56 @@ public class PlayerController : MonoBehaviour
         return cooldown;
     }
 
+    public void eat() {
+        if(reesesPieces > 0) {
+            if (eatCD <= 0) {
+                energy += 341;
+                reesesPieces -= 1;
+                eatCD = 10f;
+            }
+        }
+    }
+
     public void scare() {
         GameObject.Find("Scientist").GetComponent<EnemyController>().scared = true;
         GameObject.Find("Agent").GetComponent<EnemyController>().scared = true;
+        scareCD = 10f;
+    }
+
+    public void summon() {
+        if(reesesPieces > 0) {
+            GameObject.Find("Elliot").GetComponent<AllyController>().active = true;
+        }
+        summonCD = 10f;
+    }
+
+    public void fly() {
+        if(flyCD == 0) {
+            flyCD = 0.5f;
+            if (flying) {
+                flying = false;
+                if (SceneManager.GetActiveScene().name == "HoleScene") {
+                    rb.gravityScale = 1;
+                }
+            } else {
+                flying = true;
+                rb.gravityScale = 0;
+            }
+        }
+    }
+
+    public void search() {
+        phone0.showLocation();
+        phone1.showLocation();
+        phone2.showLocation();
+        searchCD = 20f;
+    }
+
+    public void call() {
+        if (phonePieces >= 3 && nearSpawn()) {
+            shipComing = true;
+            callCD = 30f;
+        }
     }
 
     private void struggle() {
@@ -498,5 +533,48 @@ public class PlayerController : MonoBehaviour
 
     public int getJustCollected() {
         return justCollected;
+    }
+
+    public void leaveHole() {
+        SceneManager.LoadScene("MainScene");
+        rb.gravityScale = 0;
+        justEscaped = true;
+        nearbyPhone = -1;
+    }
+
+    public int getPhonePieceCount() {
+        return phonePieces;
+    }
+
+    public int getReesesPieceCount() {
+        return reesesPieces;
+    }
+
+    public float getEatCD() {
+        return eatCD;
+    }
+
+    public float getScareCD() {
+        return scareCD;
+    }
+
+    public float getSummonCD() {
+        return summonCD;
+    }
+
+    public float getFlyCD() {
+        return flyCD;
+    }
+
+    public float getTeleportCD() {
+        return teleportCD;
+    }
+
+    public float getSearchCD() {
+        return searchCD;
+    }
+
+    public float getCallCD() {
+        return searchCD;
     }
 }

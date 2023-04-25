@@ -10,15 +10,13 @@ public class AllyController : MonoBehaviour
     private GameObject home;
 
     private GameObject target;
-    /* Stores the collision zone for the enemy */
+    /* Stores the collision zone for the ally */
     private BoxCollider2D hitbox;
+    public Renderer rend;
 
     private float moveSpeed;
-
     public bool active;
-
     public bool available;
-
     public float activationCooldown;
 
     private static float overworldX;
@@ -35,6 +33,8 @@ public class AllyController : MonoBehaviour
         active = false;
         available = true;
         activationCooldown = 1000f;
+        rend = GetComponent<Renderer>();
+        rend.enabled = false;
     }
 
     // Update is called once per frame
@@ -49,9 +49,16 @@ public class AllyController : MonoBehaviour
             }
 
             if (active) {
+                rend.enabled = true;
+                hitbox.enabled = true;
                 target = player;
             } else {
+                hitbox.enabled = false;
                 target = home;
+            }
+
+            if(gameObject.transform.position == home.transform.position) {
+                rend.enabled = false;
             }
 
             // TODO: Replace with more robust pathfinding

@@ -20,7 +20,7 @@ public class ReesesController : MonoBehaviour
     }
 
     void OnCollisionEnter2D(Collision2D collision) {
-        if(collision.collider.gameObject.tag == "Player") {
+        if(collision.collider.gameObject.tag == "Player" || collision.collider.gameObject.tag == "Hole" || collision.collider.gameObject.tag == "Rock") {
             place();
         }
     }

@@ -46,8 +46,10 @@ public class EnemyController : MonoBehaviour
 
             if (!scared) {
                 target = player;
+                hitbox.enabled = true;
             } else {
                 target = home;
+                hitbox.enabled = false;
             }
 
             // TODO: Replace with more robust pathfinding

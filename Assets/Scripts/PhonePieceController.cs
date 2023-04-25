@@ -18,7 +18,7 @@ public class PhonePieceController : MonoBehaviour
     void Update()
     {
         if(player.getNearbyPhone() != -1){
-            gameObject.transform.position = new Vector3(-4f, -2.25f, 0f);
+            gameObject.transform.position = new Vector3(4f, -2.25f, 0f);
         }
     }
 

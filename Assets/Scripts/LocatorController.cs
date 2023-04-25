@@ -33,7 +33,6 @@ public class LocatorController : MonoBehaviour
     }
 
     public void newPosition() {
-        // FIXME: Move if in the same spot as another marker
         do {
             int posIndex = Random.Range(0, 12);
             gameObject.transform.position = new Vector3(possibleX[posIndex], possibleY[posIndex], 0f);

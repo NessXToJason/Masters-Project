@@ -44,6 +44,7 @@ public class PlayerController : MonoBehaviour
     private static float searchCD = 0f;
     private static float pauseCD = 0f;
 
+    /* WIN CONDITION */
     private static bool shipComing = false;
     private static float shipETA = 30f;
     private static bool gameJustEnded = false;
@@ -65,10 +66,24 @@ public class PlayerController : MonoBehaviour
     private static float warningVisible = 0f;
     private static TMP_Text pausedText;
 
+    /* SOUND EFFECTS */
+    private AudioSource[] sfx;
+    private AudioSource enemySound;
+    private AudioSource allySound;
+    private AudioSource itemSound;
+    private AudioSource teleportSound;
+    private AudioSource eatSound;
+    private AudioSource scareSound;
+    private AudioSource fallSound;
+    private AudioSource dieSound;
+    private AudioSource callSound;
+
+    /* POSITION */
     private static float overworldX;
     private static float overworldY;
     private static bool justEscaped = false;
 
+    /* OTHER ENTITIES */
     private static EnemyController scientist;
     private static EnemyController agent;
     private static AllyController elliot;
@@ -85,6 +100,17 @@ public class PlayerController : MonoBehaviour
     {
         hitbox = GetComponent<BoxCollider2D>();
         rb = GetComponent<Rigidbody2D>();
+        sfx = GetComponents<AudioSource>();
+
+        enemySound = sfx[0];
+        allySound = sfx[1];
+        itemSound = sfx[2];
+        teleportSound = sfx[3];
+        eatSound = sfx[4];
+        scareSound = sfx[5];
+        fallSound = sfx[6];
+        dieSound = sfx[7];
+        callSound = sfx[8];
 
         if(SceneManager.GetActiveScene().name == "MainScene" || SceneManager.GetActiveScene().name == "HoleScene") {
             scareText = GameObject.Find("User Interface/Controls/ScareCD").GetComponent<TMP_Text>();
@@ -286,11 +312,13 @@ public class PlayerController : MonoBehaviour
         if(!captured) {
             switch(collision.collider.gameObject.tag) {
                 case "Scientist":
+                    enemySound.Play();
                     captured = true;
                     struggleAmt = 2000;
                     GameObject.Find("Scientist").GetComponent<EnemyController>().scared = true;
                     break;
                 case "Agent":
+                    enemySound.Play();
                     if (phonePieces > 0){
                         phonePieces--;
                         for (int i = 0; i < 3; i++) {
@@ -304,11 +332,13 @@ public class PlayerController : MonoBehaviour
                     GameObject.Find("Agent").GetComponent<EnemyController>().scared = true;
                     break;
                 case "Ally":
+                    allySound.Play();
                     energy += (reesesPieces * 773);
                     reesesPieces = 0;
                     break;
                 case "Hole":
                     if(!flying) {
+                        //fallSound.Play();
                         savePlayerCoords(gameObject.transform.position.x, gameObject.transform.position.y);
                         scientist.saveEnemyCoords(scientist.transform.position.x, scientist.transform.position.y,
                                                     agent.transform.position.x, agent.transform.position.y);
@@ -334,14 +364,17 @@ public class PlayerController : MonoBehaviour
                     }
                     break;
                 case "Phone Piece":
+                    itemSound.Play();
                     Destroy(collision.collider.gameObject);
                     phonePieces++;
                     collectPiece(getNearbyPhone());
                     break;
                 case "Reeses' Piece":
+                    itemSound.Play();
                     reesesPieces++;
                     break;
                 case "Flower":
+                    itemSound.Play();
                     Destroy(collision.gameObject);
                     lives++;
                     collectedFlower = true;
@@ -383,9 +416,9 @@ public class PlayerController : MonoBehaviour
                 teleportDirection = -transform.up * 5;
             else if(Input.GetKey(KeyCode.RightArrow)) 
                 teleportDirection = transform.right * 5;
-            
 
             if(teleportDirection != new Vector3(0,0,0)) {
+                teleportSound.Play();
                 transform.position += teleportDirection;
                 energy -= 100;
                 teleportCD = 15f;
@@ -408,6 +441,7 @@ public class PlayerController : MonoBehaviour
     public void eat() {
         if(reesesPieces > 0) {
             if (eatCD <= 0) {
+                eatSound.Play();
                 energy += 341;
                 reesesPieces -= 1;
                 eatCD = 10f;
@@ -420,6 +454,7 @@ public class PlayerController : MonoBehaviour
     public void scare() {
         if(SceneManager.GetActiveScene().name == "MainScene") {
             if (scareCD == 0f) {
+                scareSound.Play();
                 GameObject.Find("Scientist").GetComponent<EnemyController>().scared = true;
                 GameObject.Find("Agent").GetComponent<EnemyController>().scared = true;
                 scareCD = 10f;
@@ -469,6 +504,7 @@ public class PlayerController : MonoBehaviour
     }
 
     public void call() {
+        callSound.Play();
         if(SceneManager.GetActiveScene().name == "MainScene") {
             if (phonePieces >= 3) {
                 if(nearSpawn()) { 
@@ -508,6 +544,7 @@ public class PlayerController : MonoBehaviour
     * Manages behavior for player deaths
     */
     private void loseLife() {
+        dieSound.Play();
         lives--;
         if(lives == 0) {
             SceneManager.LoadScene("CreditsScene");

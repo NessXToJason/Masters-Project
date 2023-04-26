@@ -270,9 +270,29 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 349541958904487786, guid: a25f24d7549f50c4eb5b5d1148a56368, type: 3}
+      propertyPath: m_PlayOnAwake
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 579263221057219838, guid: a25f24d7549f50c4eb5b5d1148a56368, type: 3}
       propertyPath: m_GravityScale
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 897575051561299911, guid: a25f24d7549f50c4eb5b5d1148a56368, type: 3}
+      propertyPath: m_PlayOnAwake
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1410879753786292458, guid: a25f24d7549f50c4eb5b5d1148a56368, type: 3}
+      propertyPath: m_PlayOnAwake
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1678538178150887696, guid: a25f24d7549f50c4eb5b5d1148a56368, type: 3}
+      propertyPath: m_PlayOnAwake
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3665445157079649975, guid: a25f24d7549f50c4eb5b5d1148a56368, type: 3}
+      propertyPath: m_PlayOnAwake
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3927691647099440504, guid: a25f24d7549f50c4eb5b5d1148a56368, type: 3}
       propertyPath: m_Name
@@ -320,6 +340,22 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4130296569235275516, guid: a25f24d7549f50c4eb5b5d1148a56368, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5662190363451515305, guid: a25f24d7549f50c4eb5b5d1148a56368, type: 3}
+      propertyPath: m_PlayOnAwake
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6955735760535397149, guid: a25f24d7549f50c4eb5b5d1148a56368, type: 3}
+      propertyPath: m_PlayOnAwake
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7984124318438598554, guid: a25f24d7549f50c4eb5b5d1148a56368, type: 3}
+      propertyPath: m_PlayOnAwake
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8611987995796313043, guid: a25f24d7549f50c4eb5b5d1148a56368, type: 3}
+      propertyPath: m_PlayOnAwake
       value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
@@ -7815,6 +7851,7 @@ GameObject:
   m_Component:
   - component: {fileID: 788150617}
   - component: {fileID: 788150616}
+  - component: {fileID: 788150615}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -7822,6 +7859,14 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
+--- !u!81 &788150615
+AudioListener:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 788150614}
+  m_Enabled: 1
 --- !u!20 &788150616
 Camera:
   m_ObjectHideFlags: 0

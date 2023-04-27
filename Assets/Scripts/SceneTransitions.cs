@@ -3,10 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-public class SceneTransitions : MonoBehaviour
-{
-    //private bool pause = false;
-
+public class SceneTransitions : MonoBehaviour {
     /*****************************************
     * Loads the main game's scene
     *****************************************/
@@ -19,6 +16,13 @@ public class SceneTransitions : MonoBehaviour
     *****************************************/
     public void toHoleScene() {
         SceneManager.LoadScene("HoleScene");
+    }
+
+    /******************************************
+    * Loads the cutscene
+    ******************************************/
+    public void toCutScene() {
+        SceneManager.LoadScene("CutScene");
     }
 
     /******************************************

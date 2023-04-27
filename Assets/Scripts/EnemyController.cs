@@ -18,9 +18,8 @@ public class EnemyController : MonoBehaviour
     /* Stores the collision zone for the enemy */
     private BoxCollider2D hitbox;
 
-    private float moveSpeed;
-
     public bool scared;
+    //private float moveSpeed = 1.5f;
 
     private static float scienOverworldX;
     private static float scienOverworldY;
@@ -33,7 +32,6 @@ public class EnemyController : MonoBehaviour
         home = GameObject.Find(gameObject.name + "Home");
         target = player;
         hitbox = GetComponent<BoxCollider2D>();
-        moveSpeed = 1.5f;
         scared = false;
     }
 
@@ -52,11 +50,12 @@ public class EnemyController : MonoBehaviour
                 hitbox.enabled = false;
             }
 
-            // TODO: Replace with more robust pathfinding
-            Vector3 dest = new Vector3(target.transform.position.x,
-                target.transform.position.y, target.transform.position.z);
-            transform.position = Vector3.MoveTowards(transform.position,
-                dest, moveSpeed * Time.deltaTime);
+            GetComponent<NavMeshAgent2D>().destination = target.transform.position;
+            // OLD IMPLEMENTATION
+            // Vector3 dest = new Vector3(target.transform.position.x,
+            //     target.transform.position.y, target.transform.position.z);
+            // transform.position = Vector3.MoveTowards(transform.position,
+            //     dest, moveSpeed * Time.deltaTime);
             if(gameObject.transform.position.x < target.transform.position.x) {
                 gameObject.transform.localScale = new Vector3(1, 1, 1);
             } else {

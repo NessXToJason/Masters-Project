@@ -14,10 +14,9 @@ public class AllyController : MonoBehaviour
     private BoxCollider2D hitbox;
     public Renderer rend;
 
-    private float moveSpeed;
     public bool active;
-    public bool available;
     public float activationCooldown;
+    //private float moveSpeed = 1.5f;
 
     private static float overworldX;
     private static float overworldY;
@@ -29,9 +28,7 @@ public class AllyController : MonoBehaviour
         home = GameObject.Find(gameObject.name + "Home");
         target = home;
         hitbox = GetComponent<BoxCollider2D>();
-        moveSpeed = 3.5f;
         active = false;
-        available = true;
         activationCooldown = 1000f;
         rend = GetComponent<Renderer>();
         rend.enabled = false;
@@ -44,7 +41,6 @@ public class AllyController : MonoBehaviour
             if (Vector3.Distance(home.transform.position, gameObject.transform.position) == 0) {
                 if (activationCooldown > 0) {
                     active = false;
-                    available = true;
                 }
             }
 
@@ -61,11 +57,12 @@ public class AllyController : MonoBehaviour
                 rend.enabled = false;
             }
 
-            // TODO: Replace with more robust pathfinding
-            Vector3 dest = new Vector3(target.transform.position.x,
-                target.transform.position.y, target.transform.position.z);
-            transform.position = Vector3.MoveTowards(transform.position,
-                dest, moveSpeed * Time.deltaTime);
+            GetComponent<NavMeshAgent2D>().destination = target.transform.position;
+            // OLD IMPLEMENTATION
+            // Vector3 dest = new Vector3(target.transform.position.x,
+            //     target.transform.position.y, target.transform.position.z);
+            // transform.position = Vector3.MoveTowards(transform.position,
+            //     dest, moveSpeed * Time.deltaTime);
             if(gameObject.transform.position.x < target.transform.position.x) {
                 gameObject.transform.localScale = new Vector3(1, 1, 1);
             } else {
@@ -77,11 +74,10 @@ public class AllyController : MonoBehaviour
 
     void OnCollisionEnter2D(Collision2D collision) {
         switch(collision.collider.gameObject.tag) {
-                case "Player":
-                    active = false;
-                    available = false;
-                    target = home;
-                    break;
+            case "Player":
+                active = false;
+                target = home;
+                break;
         }
     }
 

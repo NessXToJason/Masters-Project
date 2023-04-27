@@ -171,6 +171,7 @@ public class PlayerController : MonoBehaviour
                     transform.position += transform.up * moveSpeed * speedMod * Time.deltaTime;
                     mothership.transform.position += transform.up * moveSpeed * speedMod * Time.deltaTime;
                     if(gameObject.transform.position.y > 6f) {
+                        shipComing = false;
                         SceneManager.LoadScene("CreditsScene");
                     }
                 } else {
@@ -338,7 +339,6 @@ public class PlayerController : MonoBehaviour
                     break;
                 case "Hole":
                     if(!flying) {
-                        //fallSound.Play();
                         savePlayerCoords(gameObject.transform.position.x, gameObject.transform.position.y);
                         scientist.saveEnemyCoords(scientist.transform.position.x, scientist.transform.position.y,
                                                     agent.transform.position.x, agent.transform.position.y);
@@ -549,6 +549,7 @@ public class PlayerController : MonoBehaviour
         if(lives == 0) {
             SceneManager.LoadScene("CreditsScene");
         } else {
+            SceneManager.LoadScene("MainScene");
             transform.position = new Vector3((float)0, (float)0, (float)0);
             energy = 5000;
         }

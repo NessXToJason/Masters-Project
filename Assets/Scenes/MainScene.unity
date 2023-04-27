@@ -106,7 +106,7 @@ NavMeshSettings:
   m_BuildSettings:
     serializedVersion: 2
     agentTypeID: 0
-    agentRadius: 0.5
+    agentRadius: 0.1
     agentHeight: 2
     agentSlope: 45
     agentClimb: 0.4
@@ -122,7 +122,7 @@ NavMeshSettings:
     preserveTilesOutsideBounds: 0
     debug:
       m_Flags: 0
-  m_NavMeshData: {fileID: 0}
+  m_NavMeshData: {fileID: 23800000, guid: a3665ec19db5cb14797d7f40e079254d, type: 2}
 --- !u!1001 &113388452
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -72294,6 +72294,7 @@ GameObject:
   - component: {fileID: 578770730}
   - component: {fileID: 578770729}
   - component: {fileID: 578770728}
+  - component: {fileID: 578770731}
   m_Layer: 7
   m_Name: Rock Tilemap
   m_TagString: Rock
@@ -73877,6 +73878,22 @@ Tilemap:
     e31: 0
     e32: 0
     e33: 1
+--- !u!114 &578770731
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 578770726}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7a99d2eab88b747a9bd011e3d849162f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  shape: 1
+  center: {x: 0, y: 0}
+  size: {x: 1, y: 1}
+  carve: 0
 --- !u!1 &1150498892
 GameObject:
   m_ObjectHideFlags: 0
@@ -73889,6 +73906,7 @@ GameObject:
   - component: {fileID: 1150498896}
   - component: {fileID: 1150498895}
   - component: {fileID: 1150498894}
+  - component: {fileID: 1150498897}
   m_Layer: 7
   m_Name: Hole Tilemap
   m_TagString: Hole
@@ -82740,6 +82758,22 @@ Tilemap:
     e31: 0
     e32: 0
     e33: 1
+--- !u!114 &1150498897
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1150498892}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7a99d2eab88b747a9bd011e3d849162f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  shape: 1
+  center: {x: 0, y: 0}
+  size: {x: 1, y: 1}
+  carve: 0
 --- !u!1 &1200011393
 GameObject:
   m_ObjectHideFlags: 0
